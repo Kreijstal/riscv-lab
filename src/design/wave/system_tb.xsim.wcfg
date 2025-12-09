@@ -1,0 +1,161 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<wave_config>
+   <wave_state>
+   </wave_state>
+   <db_ref_list>
+      <db_ref path="simk.wdb" id="1">
+         <top_modules>
+            <top_module name="ddr_ctrl_reg_pkg" />
+            <top_module name="dm" />
+            <top_module name="glbl" />
+            <top_module name="ibex_pkg" />
+            <top_module name="regdemo_reg_pkg" />
+            <top_module name="rvlab_tap_pkg" />
+            <top_module name="system_tb" />
+            <top_module name="tl_main_pkg" />
+            <top_module name="tl_peri_pkg" />
+            <top_module name="tlul_pkg" />
+            <top_module name="top_pkg" />
+         </top_modules>
+      </db_ref>
+   </db_ref_list>
+   <zoom_setting>
+      <ZoomStartTime time="0.000000000 us"></ZoomStartTime>
+      <ZoomEndTime time="4,105.853163393 us"></ZoomEndTime>
+      <Cursor1Time time="4.435713937 us"></Cursor1Time>
+   </zoom_setting>
+   <column_width_setting>
+      <NameColumnWidth column_width="276"></NameColumnWidth>
+      <ValueColumnWidth column_width="88"></ValueColumnWidth>
+   </column_width_setting>
+   <WVObjectSize size="15" />
+   <wvobject type="logic" fp_name="/system_tb/board/DUT/clk_100mhz_i">
+      <obj_property name="ElementShortName">clk_100mhz_i</obj_property>
+      <obj_property name="ObjectShortName">clk_100mhz_i</obj_property>
+   </wvobject>
+   <wvobject type="logic" fp_name="/system_tb/board/DUT/jtag_tck_i">
+      <obj_property name="ElementShortName">jtag_tck_i</obj_property>
+      <obj_property name="ObjectShortName">jtag_tck_i</obj_property>
+   </wvobject>
+   <wvobject type="logic" fp_name="/system_tb/board/DUT/jtag_tdi_i">
+      <obj_property name="ElementShortName">jtag_tdi_i</obj_property>
+      <obj_property name="ObjectShortName">jtag_tdi_i</obj_property>
+   </wvobject>
+   <wvobject type="logic" fp_name="/system_tb/board/DUT/jtag_tdo_o">
+      <obj_property name="ElementShortName">jtag_tdo_o</obj_property>
+      <obj_property name="ObjectShortName">jtag_tdo_o</obj_property>
+   </wvobject>
+   <wvobject type="logic" fp_name="/system_tb/board/DUT/jtag_tms_i">
+      <obj_property name="ElementShortName">jtag_tms_i</obj_property>
+      <obj_property name="ObjectShortName">jtag_tms_i</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/system_tb/board/DUT/led_o">
+      <obj_property name="ElementShortName">led_o[7:0]</obj_property>
+      <obj_property name="ObjectShortName">led_o[7:0]</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/system_tb/board/DUT/button_i">
+      <obj_property name="ElementShortName">button_i[4:0]</obj_property>
+      <obj_property name="ObjectShortName">button_i[4:0]</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/system_tb/board/DUT/switch_i">
+      <obj_property name="ElementShortName">switch_i[7:0]</obj_property>
+      <obj_property name="ObjectShortName">switch_i[7:0]</obj_property>
+   </wvobject>
+   <wvobject type="logic" fp_name="/system_tb/board/DUT/clk">
+      <obj_property name="ElementShortName">clk</obj_property>
+      <obj_property name="ObjectShortName">clk</obj_property>
+   </wvobject>
+   <wvobject type="logic" fp_name="/system_tb/board/DUT/sys_rst_n">
+      <obj_property name="ElementShortName">sys_rst_n</obj_property>
+      <obj_property name="ObjectShortName">sys_rst_n</obj_property>
+   </wvobject>
+   <wvobject type="logic" fp_name="/system_tb/board/DUT/ndmreset">
+      <obj_property name="ElementShortName">ndmreset</obj_property>
+      <obj_property name="ObjectShortName">ndmreset</obj_property>
+   </wvobject>
+   <wvobject type="logic" fp_name="/system_tb/board/DUT/sys_rst_n">
+      <obj_property name="ElementShortName">sys_rst_n</obj_property>
+      <obj_property name="ObjectShortName">sys_rst_n</obj_property>
+   </wvobject>
+   <wvobject type="logic" fp_name="/system_tb/board/DUT/dbg_rst_n">
+      <obj_property name="ElementShortName">dbg_rst_n</obj_property>
+      <obj_property name="ObjectShortName">dbg_rst_n</obj_property>
+   </wvobject>
+   <wvobject type="group" fp_name="group80">
+      <obj_property name="label">mig-ddr</obj_property>
+      <obj_property name="DisplayName">label</obj_property>
+   </wvobject>
+   <wvobject type="group" fp_name="group97">
+      <obj_property name="label">DDR3</obj_property>
+      <obj_property name="DisplayName">label</obj_property>
+      <obj_property name="isExpanded"></obj_property>
+      <wvobject type="array" fp_name="/system_tb/ddr3_dq">
+         <obj_property name="ElementShortName">ddr3_dq[15:0]</obj_property>
+         <obj_property name="ObjectShortName">ddr3_dq[15:0]</obj_property>
+      </wvobject>
+      <wvobject type="array" fp_name="/system_tb/ddr3_dqs_n">
+         <obj_property name="ElementShortName">ddr3_dqs_n[1:0]</obj_property>
+         <obj_property name="ObjectShortName">ddr3_dqs_n[1:0]</obj_property>
+      </wvobject>
+      <wvobject type="array" fp_name="/system_tb/ddr3_dqs_p">
+         <obj_property name="ElementShortName">ddr3_dqs_p[1:0]</obj_property>
+         <obj_property name="ObjectShortName">ddr3_dqs_p[1:0]</obj_property>
+      </wvobject>
+      <wvobject type="array" fp_name="/system_tb/ddr3_addr">
+         <obj_property name="ElementShortName">ddr3_addr[14:0]</obj_property>
+         <obj_property name="ObjectShortName">ddr3_addr[14:0]</obj_property>
+      </wvobject>
+      <wvobject type="array" fp_name="/system_tb/ddr3_ba">
+         <obj_property name="ElementShortName">ddr3_ba[2:0]</obj_property>
+         <obj_property name="ObjectShortName">ddr3_ba[2:0]</obj_property>
+      </wvobject>
+      <wvobject type="logic" fp_name="/system_tb/ddr3_ras_n">
+         <obj_property name="ElementShortName">ddr3_ras_n</obj_property>
+         <obj_property name="ObjectShortName">ddr3_ras_n</obj_property>
+      </wvobject>
+      <wvobject type="logic" fp_name="/system_tb/ddr3_cas_n">
+         <obj_property name="ElementShortName">ddr3_cas_n</obj_property>
+         <obj_property name="ObjectShortName">ddr3_cas_n</obj_property>
+      </wvobject>
+      <wvobject type="logic" fp_name="/system_tb/ddr3_we_n">
+         <obj_property name="ElementShortName">ddr3_we_n</obj_property>
+         <obj_property name="ObjectShortName">ddr3_we_n</obj_property>
+      </wvobject>
+      <wvobject type="logic" fp_name="/system_tb/ddr3_reset_n">
+         <obj_property name="ElementShortName">ddr3_reset_n</obj_property>
+         <obj_property name="ObjectShortName">ddr3_reset_n</obj_property>
+      </wvobject>
+      <wvobject type="array" fp_name="/system_tb/ddr3_ck_p">
+         <obj_property name="ElementShortName">ddr3_ck_p[0:0]</obj_property>
+         <obj_property name="ObjectShortName">ddr3_ck_p[0:0]</obj_property>
+      </wvobject>
+      <wvobject type="array" fp_name="/system_tb/ddr3_ck_n">
+         <obj_property name="ElementShortName">ddr3_ck_n[0:0]</obj_property>
+         <obj_property name="ObjectShortName">ddr3_ck_n[0:0]</obj_property>
+      </wvobject>
+      <wvobject type="array" fp_name="/system_tb/ddr3_cke">
+         <obj_property name="ElementShortName">ddr3_cke[0:0]</obj_property>
+         <obj_property name="ObjectShortName">ddr3_cke[0:0]</obj_property>
+      </wvobject>
+      <wvobject type="array" fp_name="/system_tb/ddr3_dm">
+         <obj_property name="ElementShortName">ddr3_dm[1:0]</obj_property>
+         <obj_property name="ObjectShortName">ddr3_dm[1:0]</obj_property>
+      </wvobject>
+      <wvobject type="array" fp_name="/system_tb/board/DUT/tlul_ddr_i/mig2core">
+         <obj_property name="ElementShortName">mig2core</obj_property>
+         <obj_property name="ObjectShortName">mig2core</obj_property>
+      </wvobject>
+      <wvobject type="array" fp_name="/system_tb/board/DUT/tlul_ddr_i/core2mig">
+         <obj_property name="ElementShortName">core2mig</obj_property>
+         <obj_property name="ObjectShortName">core2mig</obj_property>
+      </wvobject>
+      <wvobject type="array" fp_name="/system_tb/board/DUT/tlul_ddr_i/ctrl_hw2reg">
+         <obj_property name="ElementShortName">ctrl_hw2reg</obj_property>
+         <obj_property name="ObjectShortName">ctrl_hw2reg</obj_property>
+      </wvobject>
+      <wvobject type="array" fp_name="/system_tb/board/DUT/tlul_ddr_i/ctrl_reg2hw">
+         <obj_property name="ElementShortName">ctrl_reg2hw</obj_property>
+         <obj_property name="ObjectShortName">ctrl_reg2hw</obj_property>
+      </wvobject>
+   </wvobject>
+</wave_config>

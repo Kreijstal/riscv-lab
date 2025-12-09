@@ -1,0 +1,41 @@
+// SPDX-License-Identifier: SHL-2.1
+// SPDX-FileCopyrightText: 2024 RVLab Contributors
+
+{
+  name: "ddr_ctrl"
+  clock_primary: "sys_clk"
+  bus_device: "tlul"
+  regwidth: "32"
+  registers: [
+    {
+      name: "temp"
+      desc: "ADC temperature"
+      swaccess: "ro"
+      hwaccess: "hwo"
+      hwext: "true"
+      fields: [
+        {bits: '11:0', name: 'rdata', desc: 'value'}
+      ]
+    }
+    {
+      name: "status"
+      desc: "DDR MIG status"
+      swaccess: "ro"
+      hwaccess: "hwo"
+      hwext: "true"
+      fields: [
+        {bits: "0", name: "present", desc: "DDR / MIG present"}
+        {bits: "1", name: "calib_complete", desc: "DDR initial calibration complete"}
+      ]
+    }  
+    {
+      name: "ctrl"
+      desc: "Control"
+      swaccess: "rw"
+      hwaccess: "hro"
+      fields: [
+        {bits: "0", name: "mig_rst_n", resval: "0", desc: "MIG reset (active low)"}
+      ]
+    },
+  ]
+}
