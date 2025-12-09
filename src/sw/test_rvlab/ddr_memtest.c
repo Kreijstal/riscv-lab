@@ -7,20 +7,6 @@
 #include <stdbool.h>
 #include <rvlab.h>
 
-int ddr_init(void) {
-    if(!(REG32(DDR_CTRL_STATUS(0)) & (1<<DDR_CTRL_STATUS_PRESENT_LSB))) {
-        printf("Error: DDR not present.\n");
-        return 1;
-    }
-    REG32(DDR_CTRL_CTRL(0)) |= (1<<DDR_CTRL_CTRL_MIG_RST_N_LSB); // deassert reset
-
-    // wait for calibration to complete:
-    while(!(REG32(DDR_CTRL_STATUS(0)) & (1<<DDR_CTRL_STATUS_CALIB_COMPLETE_LSB))); 
-
-    printf("ddr calib complete, temp: %i\n\n", REG32(DDR_CTRL_TEMP(0)));
-    return 0;
-}
-
 static void lfsr_init(uint32_t *v) {
     *v = 1;
 }
