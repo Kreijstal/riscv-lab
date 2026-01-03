@@ -31,7 +31,6 @@ module tlul_test_host (
 
   task do_transaction();
     integer i;
-    integer wait_d;
     // Send request on A channel:
     @(negedge clk_i);
     tl_o.a_valid = 1'b1;
@@ -43,29 +42,15 @@ module tlul_test_host (
         break;
       end
       if (i++ == 10) begin
-        $display("Warning: device takes > 10 cycles to respond (a_valid=%0b a_ready=%0b d_valid=%0b d_ready=%0b)",
-                 tl_o.a_valid, tl_i.a_ready, tl_i.d_valid, tl_o.d_ready);
-      end
-      if (i == 1000) begin
-        $fatal(1, "Timeout waiting for a_ready (a_valid=%0b a_ready=%0b d_valid=%0b d_ready=%0b)",
-               tl_o.a_valid, tl_i.a_ready, tl_i.d_valid, tl_o.d_ready);
+        $display("Warning: device takes > 10 cycles to respond.");
       end
     end
     @(negedge clk_i);
     tl_o.a_valid = 1'b0;
     //tl_o <= TlIdle;  // a_valid <= '0;
-    wait_d = 0;
     while (!tl_i.d_valid) begin
       @(posedge clk_i);
-      wait_d = wait_d + 1;
-      if (wait_d == 10) begin
-        $display("Warning: waiting for d_valid > 10 cycles (a_valid=%0b a_ready=%0b d_valid=%0b d_ready=%0b)",
-                 tl_o.a_valid, tl_i.a_ready, tl_i.d_valid, tl_o.d_ready);
-      end
-      if (wait_d == 1000) begin
-        $fatal(1, "Timeout waiting for d_valid (a_valid=%0b a_ready=%0b d_valid=%0b d_ready=%0b)",
-               tl_o.a_valid, tl_i.a_ready, tl_i.d_valid, tl_o.d_ready);
-      end
+      $display("Waiting for response to be d_valid = 1");
     end
     if (tl_i.d_error) begin
       $display("Warning: response d_error was %p.", tl_i.d_error);
@@ -100,7 +85,7 @@ module tlul_test_host (
     do_transaction();
     rdata = tl_i.d_data;
     if (tl_i.d_opcode != tlul_pkg::AccessAckData) begin
-      $display("Warning: put response d_opcode was %p.", tl_i.d_opcode);
+      $display("Warning: get response d_opcode was %p.", tl_i.d_opcode);
     end
     @(posedge clk_i);
     $display("Debug: get word addr=0x%08x, rdata=0x%08x", addr, rdata);

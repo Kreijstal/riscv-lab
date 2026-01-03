@@ -59,7 +59,37 @@ jobs:
         run: |
           git submodule update --init --recursive vendor/XilinxUnisimLibrary
 
-      - name: Apply Verilator compatibility patches
-        run: |
-          cd vendor/XilinxUnisimLibrary
-          patch -p1 < ../../patches/unisims/verilator_compat.patch
+    - name: Apply Verilator compatibility patches
+      run: |
+        cd vendor/XilinxUnisimLibrary
+        patch -p1 < ../../patches/unisims/verilator_compat.patch
+
+    - name: Install oss-cad-suite (prebuilt)
+      run: |
+        ASSET_META=$(python3 - <<'PY'
+        import json
+        import urllib.request
+        url = "https://api.github.com/repos/YosysHQ/oss-cad-suite-build/releases/latest"
+        data = json.load(urllib.request.urlopen(url))
+        for asset in data.get("assets", []):
+            name = asset.get("name", "")
+            if name.startswith("oss-cad-suite-linux-x64-") and (name.endswith(".tgz") or name.endswith(".tar.xz")):
+                print(f"{name} {asset['browser_download_url']}")
+                break
+        else:
+            raise SystemExit("oss-cad-suite linux-x64 asset not found")
+        PY
+        )
+        ASSET_NAME=${ASSET_META%% *}
+        ASSET_URL=${ASSET_META#* }
+        curl -L "$ASSET_URL" -o "$ASSET_NAME"
+        mkdir -p oss-cad-suite
+        case "$ASSET_NAME" in
+          *.tar.xz) tar -xJf "$ASSET_NAME" -C oss-cad-suite --strip-components=1 ;;
+          *.tgz|*.tar.gz) tar -xzf "$ASSET_NAME" -C oss-cad-suite --strip-components=1 ;;
+          *) echo "Unknown oss-cad-suite archive: $ASSET_NAME" >&2; exit 1 ;;
+        esac
+        echo "OSS_CAD_BIN=$(pwd)/oss-cad-suite/bin" >> "$GITHUB_ENV"
+
+
+

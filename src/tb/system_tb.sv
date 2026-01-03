@@ -224,8 +224,10 @@ module system_tb;
 
   initial begin
     string sw_mem_filename;
+`ifdef VERILATOR
     $dumpfile("trace.vcd");
     $dumpvars(0, system_tb);
+`endif
 
     tests.test_idcode();
     tests.test_dtmcs();
