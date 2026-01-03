@@ -203,12 +203,12 @@ def simulate(
 
     print(f"Running Verilator simulation command:\n{shlex.join(sim_cmd)}")
     try:
-        result = subprocess.run(
+        result = subprocess.run(  # nosec: B603 - using list arguments, not shell=True
             sim_cmd,
             cwd=cwd,
             text=True,
             check=True
-        )  # nosec: B603 - using list arguments, not shell=True
+        )
         print(f"Verilator simulation completed successfully (return code {result.returncode}).")
         if vcd_out:
             # The default trace file from Verilator's --main is trace.vcd in the CWD.
