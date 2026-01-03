@@ -2,6 +2,7 @@
 # SPDX-FileCopyrightText: 2026 RVLab Contributors
 
 import subprocess
+import shlex
 from pathlib import Path
 from typing import Optional, List, Dict
 import os
@@ -47,18 +48,29 @@ def find_verilator_executable() -> List[str]:
 def compile(
         src_files: List[Path],
         cwd: Optional[Path] = None,
-        include_dirs: List[Path] = [],
-        defines: Dict[str, str] = {},
+        include_dirs: Optional[List[Path]] = None,
+        defines: Optional[Dict[str, str]] = None,
         timescale: str = "1ps/1fs",
-        top_modules: List[str] = ["top"],
+        top_modules: Optional[List[str]] = None,
         unisims_dir: Optional[Path] = None):
     """Compile Verilog sources with Verilator"""
     if cwd is None:
         cwd = Path.cwd()
     if unisims_dir is None:
         raise ValueError("unisims_dir must be provided for Verilator simulation")
-
-    top_module = top_modules[0]  # Assuming the first top module is the primary one
+    
+    # Initialize mutable defaults
+    include_dirs = include_dirs or []
+    defines = defines or {}
+    top_modules = top_modules or ["top"]
+    
+    # Validate top_modules
+    if not top_modules:
+        raise ValueError("top_modules list cannot be empty")
+    if len(top_modules) > 1:
+        print(f"Warning: Multiple top modules provided: {top_modules}. Using first one: {top_modules[0]}")
+    
+    top_module = top_modules[0]  # Using the first top module as the primary one
 
     # Deduplicate source files while preserving order
     seen = set()
@@ -97,13 +109,14 @@ def compile(
     # Get verilator command
     verilator_cmd = find_verilator_executable()
     
-    print(f"Running Verilator compile command:\n{' '.join(verilator_cmd)} {' '.join(verilator_opts)}")
-    subprocess.check_call(verilator_cmd + verilator_opts, cwd=cwd)
+    full_cmd = verilator_cmd + verilator_opts
+    print(f"Running Verilator compile command:\n{shlex.join(full_cmd)}")
+    subprocess.check_call(full_cmd, cwd=cwd)
 
     # Build the simulation
     executable_basename = f"V{top_module}"
     make_cmd = ["make", "-j", "-C", "obj_dir", "-f", f"{executable_basename}.mk", executable_basename]
-    print(f"Building Verilator simulation:\n{' '.join(make_cmd)}")
+    print(f"Building Verilator simulation:\n{shlex.join(make_cmd)}")
     subprocess.check_call(make_cmd, cwd=cwd)
 
 def simulate(
@@ -111,24 +124,31 @@ def simulate(
         top_modules: List[str],
         unisims_dir: Path,
         cwd: Optional[Path] = None,
-        include_dirs: List[Path] = [],
-        defines: Dict[str, str] = {},
+        include_dirs: Optional[List[Path]] = None,
+        defines: Optional[Dict[str, str]] = None,
         wave_do: Optional[Path] = None,
-        sdf: Dict[str, Path] = {},
+        sdf: Optional[Dict[str, Path]] = None,
         vcd_out: Optional[Path] = None,
         saif_out: Optional[Path] = None,
         log_all: bool = False,
         run_on_start: bool = True,
         batch_mode: bool = False,
         timescale: str = "1ps/1fs",
-        plusargs: Dict[str, str] = {},
+        plusargs: Optional[Dict[str, str]] = None,
         netlist_sim = None,
-        libs: List = [],
+        libs: Optional[List] = None,
         hide_mig_timingcheck_msg: bool = False,
         ):
     """Run simulation with Verilator"""
     if cwd is None:
         cwd = Path.cwd()
+    
+    # Initialize mutable defaults
+    include_dirs = include_dirs or []
+    defines = defines or {}
+    sdf = sdf or {}
+    plusargs = plusargs or {}
+    libs = libs or []
     
     # Compile and build with Verilator
     compile(src_files, cwd, include_dirs, defines, timescale, top_modules, unisims_dir)
@@ -152,7 +172,7 @@ def simulate(
     if vcd_out:
         sim_cmd.append("+vcd")
 
-    print(f"Running Verilator simulation command:\n{' '.join(sim_cmd)}")
+    print(f"Running Verilator simulation command:\n{shlex.join(sim_cmd)}")
     try:
         result = subprocess.run(
             sim_cmd,

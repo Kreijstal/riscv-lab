@@ -31,6 +31,13 @@ def _apply_unisims_patches(unisims_repo: Path, patches_dir: Path) -> None:
 
         subprocess.check_call(["git", "-C", str(unisims_repo), "apply", str(patch_file)])
 
+def _get_prepared_unisims_dir(base_dir: Path) -> Path:
+    """Get prepared unisims directory with patches applied."""
+    unisims_repo = base_dir / "vendor" / "XilinxUnisimLibrary"
+    patches_dir = base_dir / "patches" / "unisims"
+    _apply_unisims_patches(unisims_repo, patches_dir)
+    return unisims_repo / "verilog" / "src" / "unisims"
+
 class Sources(Block):
     """Hardware sources"""
 
@@ -106,19 +113,16 @@ class Sources(Block):
         r.include_dirs = base_srcs.include_dirs
         r.xcis = base_srcs.xcis
 
-        unisims_repo = self.flow.base_dir / "vendor" / "XilinxUnisimLibrary"
-        patches_dir = self.flow.base_dir / "patches" / "unisims"
-        _apply_unisims_patches(unisims_repo, patches_dir)
-
+        # Get prepared unisims directory
+        r.unisims_dir = _get_prepared_unisims_dir(self.flow.base_dir)
+        
         # Use vendored glbl.v from XilinxUnisimLibrary submodule
+        unisims_repo = self.flow.base_dir / "vendor" / "XilinxUnisimLibrary"
         vendored_glbl = unisims_repo / "verilog" / "src" / "glbl.v"
         if not vendored_glbl.exists():
             raise FileNotFoundError(f"Vendored glbl.v not found at {vendored_glbl}")
         
-        r.tb_srcs = [x for x in base_srcs.tb_srcs if not str(x).endswith('glbl.v')] + [vendored_glbl]
-        
-        # Add Verilator-specific vendored unisims directory
-        r.unisims_dir = unisims_repo / "verilog" / "src" / "unisims"
+        r.tb_srcs = [x for x in base_srcs.tb_srcs if x.name != "glbl.v"] + [vendored_glbl]
 
         return r
 
@@ -152,13 +156,10 @@ class Sources(Block):
 
         # For Verilator module testbenches, we don't need glbl.v
         # Filter out any glbl.v files from base sources
-        r.tb_srcs = [x for x in base_srcs.tb_srcs if not str(x).endswith('glbl.v')]
+        r.tb_srcs = [x for x in base_srcs.tb_srcs if x.name != "glbl.v"]
         
         # Add Verilator-specific vendored unisims directory
-        unisims_repo = self.flow.base_dir / "vendor" / "XilinxUnisimLibrary"
-        patches_dir = self.flow.base_dir / "patches" / "unisims"
-        _apply_unisims_patches(unisims_repo, patches_dir)
-        r.unisims_dir = unisims_repo / "verilog" / "src" / "unisims"
+        r.unisims_dir = _get_prepared_unisims_dir(self.flow.base_dir)
 
         return r
 
