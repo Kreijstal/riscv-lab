@@ -5,6 +5,31 @@ from pydesignflow import Block, task, Result
 from .tools import vivado
 import subprocess
 from .tools.overlay import filter_solutions_overlay
+from pathlib import Path
+
+def _apply_unisims_patches(unisims_repo: Path, patches_dir: Path) -> None:
+    patch_files = sorted(patches_dir.glob("*.patch"))
+    if not patch_files:
+        return
+
+    for patch_file in patch_files:
+        reverse_check = subprocess.run(
+            ["git", "-C", str(unisims_repo), "apply", "--reverse", "--check", str(patch_file)],
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+        )
+        if reverse_check.returncode == 0:
+            continue
+
+        forward_check = subprocess.run(
+            ["git", "-C", str(unisims_repo), "apply", "--check", str(patch_file)],
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+        )
+        if forward_check.returncode != 0:
+            raise RuntimeError(f"Failed to apply Unisims patch {patch_file}")
+
+        subprocess.check_call(["git", "-C", str(unisims_repo), "apply", str(patch_file)])
 
 class Sources(Block):
     """Hardware sources"""
@@ -44,6 +69,75 @@ class Sources(Block):
         
         r.xcis = []
         
+        return r
+
+    @task(requires={
+        'base_srcs':'.srcs_noddr',
+        }, always_rebuild=True, hidden=True)
+    def srcs_noddr_verilator(self, cwd, base_srcs):
+        """RTL + verification sources without DDR3, with Verilator vendored dependencies"""
+        r = Result()
+
+        # Copy all attributes from base sources
+        r.design_srcs = base_srcs.design_srcs
+        r.defines = base_srcs.defines
+        r.include_dirs = base_srcs.include_dirs
+        r.xcis = base_srcs.xcis
+
+        unisims_repo = self.flow.base_dir / "vendor" / "XilinxUnisimLibrary"
+        patches_dir = self.flow.base_dir / "patches" / "unisims"
+        _apply_unisims_patches(unisims_repo, patches_dir)
+
+        # Use vendored glbl.v from XilinxUnisimLibrary submodule
+        vendored_glbl = unisims_repo / "verilog" / "src" / "glbl.v"
+        if not vendored_glbl.exists():
+            raise FileNotFoundError(f"Vendored glbl.v not found at {vendored_glbl}")
+        
+        r.tb_srcs = [x for x in base_srcs.tb_srcs if not str(x).endswith('glbl.v')] + [vendored_glbl]
+        
+        # Add Verilator-specific vendored unisims directory
+        r.unisims_dir = unisims_repo / "verilog" / "src" / "unisims"
+
+        return r
+
+    @task(requires={
+        'base_srcs':'.srcs_noddr',
+        }, always_rebuild=True, hidden=True)
+    def srcs_module_verilator(self, cwd, base_srcs):
+        """RTL + verification sources for module-level testbenches with Verilator"""
+        r = Result()
+
+        # Copy all attributes from base sources
+        r.design_srcs = base_srcs.design_srcs
+        r.defines = base_srcs.defines
+        r.include_dirs = base_srcs.include_dirs
+        r.xcis = base_srcs.xcis
+
+        # Filter out FPGA-specific files that use Xilinx primitives
+        # These files are not needed for module-level testbenches
+        rvlab_fpga_dir = self.src_dir / "rtl" / "rvlab_fpga"
+        filtered_design_srcs = []
+        for src in r.design_srcs:
+            # Keep package files (they don't instantiate primitives)
+            if src.parent.name == 'pkg':
+                filtered_design_srcs.append(src)
+                continue
+            # Skip other files from rvlab_fpga directory
+            if rvlab_fpga_dir in src.parents:
+                continue
+            filtered_design_srcs.append(src)
+        r.design_srcs = filtered_design_srcs
+
+        # For Verilator module testbenches, we don't need glbl.v
+        # Filter out any glbl.v files from base sources
+        r.tb_srcs = [x for x in base_srcs.tb_srcs if not str(x).endswith('glbl.v')]
+        
+        # Add Verilator-specific vendored unisims directory
+        unisims_repo = self.flow.base_dir / "vendor" / "XilinxUnisimLibrary"
+        patches_dir = self.flow.base_dir / "patches" / "unisims"
+        _apply_unisims_patches(unisims_repo, patches_dir)
+        r.unisims_dir = unisims_repo / "verilog" / "src" / "unisims"
+
         return r
 
     @task(requires={

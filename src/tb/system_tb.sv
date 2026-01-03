@@ -3,6 +3,11 @@
 
 module system_tb;
 
+`ifdef VERILATOR
+  // Provide a glbl instance so unisims can resolve glbl.GSR/GTS in Verilator.
+  glbl glbl();
+`endif
+
   // Signal definitions
   // ------------------
 

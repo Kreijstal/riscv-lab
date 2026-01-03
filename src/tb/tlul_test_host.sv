@@ -31,24 +31,41 @@ module tlul_test_host (
 
   task do_transaction();
     integer i;
+    integer wait_d;
     // Send request on A channel:
-    @(posedge clk_i);
-    tl_o.a_valid <= '1;
-    @(posedge clk_i);
+    @(negedge clk_i);
+    tl_o.a_valid = 1'b1;
+    tl_o.d_ready = 1'b1;
     i = '0;
-    while (!tl_i.a_ready) begin
-      if (i++ == 10) begin
-        $display("Warning: device takes > 10 cycles to respond.");
-      end
+    while (1) begin
       @(posedge clk_i);
+      if (tl_i.a_ready) begin
+        break;
+      end
+      if (i++ == 10) begin
+        $display("Warning: device takes > 10 cycles to respond (a_valid=%0b a_ready=%0b d_valid=%0b d_ready=%0b)",
+                 tl_o.a_valid, tl_i.a_ready, tl_i.d_valid, tl_o.d_ready);
+      end
+      if (i == 1000) begin
+        $fatal(1, "Timeout waiting for a_ready (a_valid=%0b a_ready=%0b d_valid=%0b d_ready=%0b)",
+               tl_o.a_valid, tl_i.a_ready, tl_i.d_valid, tl_o.d_ready);
+      end
     end
-    tl_o.a_valid <= '0;
-    tl_o.d_ready <= '1;
-    @(posedge clk_i);
+    @(negedge clk_i);
+    tl_o.a_valid = 1'b0;
     //tl_o <= TlIdle;  // a_valid <= '0;
+    wait_d = 0;
     while (!tl_i.d_valid) begin
       @(posedge clk_i);
-      $display("Waiting for response to be d_valid = 1");
+      wait_d = wait_d + 1;
+      if (wait_d == 10) begin
+        $display("Warning: waiting for d_valid > 10 cycles (a_valid=%0b a_ready=%0b d_valid=%0b d_ready=%0b)",
+                 tl_o.a_valid, tl_i.a_ready, tl_i.d_valid, tl_o.d_ready);
+      end
+      if (wait_d == 1000) begin
+        $fatal(1, "Timeout waiting for d_valid (a_valid=%0b a_ready=%0b d_valid=%0b d_ready=%0b)",
+               tl_o.a_valid, tl_i.a_ready, tl_i.d_valid, tl_o.d_ready);
+      end
     end
     if (tl_i.d_error) begin
       $display("Warning: response d_error was %p.", tl_i.d_error);
@@ -62,11 +79,11 @@ module tlul_test_host (
   endtask
 
   task put_word(input logic [31:0] addr, input logic [31:0] wdata);
-    tl_o.a_address <= addr;
-    tl_o.a_opcode  <= tlul_pkg::PutFullData;
-    tl_o.a_size    <= 2;  // 2^2 = 4 byte access
-    tl_o.a_data    <= wdata;
-    tl_o.a_mask    <= 4'b1111;
+    tl_o.a_address = addr;
+    tl_o.a_opcode  = tlul_pkg::PutFullData;
+    tl_o.a_size    = 2;  // 2^2 = 4 byte access
+    tl_o.a_data    = wdata;
+    tl_o.a_mask    = 4'b1111;
     do_transaction();
     if (tl_i.d_opcode != tlul_pkg::AccessAck) begin
       $display("Warning: put response d_opcode was %p.", tl_i.d_opcode);
@@ -76,12 +93,12 @@ module tlul_test_host (
   endtask
 
   task get_word(input logic [31:0] addr, output logic [31:0] rdata);
-    tl_o.a_address <= addr;
-    tl_o.a_opcode  <= tlul_pkg::Get;
-    tl_o.a_size    <= 2;  // 2^2 = 4 byte access
-    tl_o.a_mask    <= 4'b1111;
+    tl_o.a_address = addr;
+    tl_o.a_opcode  = tlul_pkg::Get;
+    tl_o.a_size    = 2;  // 2^2 = 4 byte access
+    tl_o.a_mask    = 4'b1111;
     do_transaction();
-    rdata <= tl_i.d_data;
+    rdata = tl_i.d_data;
     if (tl_i.d_opcode != tlul_pkg::AccessAckData) begin
       $display("Warning: put response d_opcode was %p.", tl_i.d_opcode);
     end
