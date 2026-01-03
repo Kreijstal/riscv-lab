@@ -1,0 +1,65 @@
+# SPDX-License-Identifier: Apache-2.0
+# SPDX-FileCopyrightText: 2026 RVLab Contributors
+
+diff --git a/verilog/src/unisims/FDRE.v b/verilog/src/unisims/FDRE.v
+index 6f3fb7f..cbddd88 100644
+--- a/verilog/src/unisims/FDRE.v
++++ b/verilog/src/unisims/FDRE.v
+@@ -69,7 +69,7 @@ module FDRE #(
+ 
+   reg Q_out;
+ 
+-  assign #100 Q = Q_out;
++  assign Q = Q_out;
+ 
+     always @(glblGSR)
+       if (glblGSR) 
+diff --git a/verilog/src/unisims/MMCME2_ADV.v b/verilog/src/unisims/MMCME2_ADV.v
+index 7b08f56..c615fc5 100644
+--- a/verilog/src/unisims/MMCME2_ADV.v
++++ b/verilog/src/unisims/MMCME2_ADV.v
+@@ -3855,7 +3855,7 @@ endtask
+ task upper_mix_drp;
+     output reg [2:0] pm_f;
+     output reg       wf_f;
+-    output reg [1:0] mx;
++    output reg [2:0] mx;
+     output reg       e;
+     output reg       nc;
+     output reg [5:0] dt;
+@@ -3874,7 +3874,7 @@ task upper_frac_drp;
+     output reg [2:0] frac;
+     output reg       frac_en;
+     output reg       wf_r;
+-    output reg [1:0] mx;
++    output reg [2:0] mx;
+     output reg       e;
+     output reg       nc;
+     output reg [5:0] dt;
+@@ -3891,7 +3891,7 @@ end
+ endtask 
+ 
+ task upper_drp;
+-    output reg [1:0] mx;
++    output reg [2:0] mx;
+     output reg       e;
+     output reg       nc;
+     output reg [5:0] dt;
+@@ -3966,7 +3966,7 @@ task attr_to_mc;
+     output reg [2:0] frac;
+     output reg       frac_en;
+     output reg       wf_r;
+-    output reg [1:0] mx;
++    output reg [2:0] mx;
+     output reg       e;
+     output reg       nc;
+     output reg [5:0] dt;
+@@ -4509,7 +4509,7 @@ endfunction
+     $width (posedge PWRDWN, 0:0:0, 0, notifier);
+     $width (posedge RST, 0:0:0, 0, notifier);
+ `endif
+-    specparam PATHPULSE$ = 0;
++    specparam PATHPULSE_ = 0;
+   endspecify
+ `endif
+ endmodule
