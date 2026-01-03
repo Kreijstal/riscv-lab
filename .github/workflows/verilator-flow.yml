@@ -54,7 +54,12 @@ jobs:
     - name: Initialize XilinxUnisimLibrary submodule
       run: |
         git submodule update --init --recursive vendor/XilinxUnisimLibrary
-        
+
+    - name: Apply Verilator compatibility patches
+      run: |
+        cd vendor/XilinxUnisimLibrary
+        patch -p1 < ../../patches/unisims/verilator_compat.patch
+
     - name: Run Verilator module testbench
       id: run-module-test
       run: |

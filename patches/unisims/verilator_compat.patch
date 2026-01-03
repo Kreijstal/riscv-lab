@@ -1,0 +1,58 @@
+# SPDX-FileCopyrightText: 2026 RVLab Contributors
+# SPDX-License-Identifier: Apache-2.0
+
+From f1cdfd3656f1e4077dc685015be8e44debe98099 Mon Sep 17 00:00:00 2001
+From: Kreijstal <rainb@tfwno.gf>
+Date: Sat, 3 Jan 2026 16:18:21 +0100
+Subject: [PATCH] Verilator compatibility fixes for FDRE and MMCME2_ADV
+
+- FDRE.v: Replace deprecated assign/deassign with explicit GSR mux
+  to avoid Verilator BLKANDNBLK error (mixing blocking and non-blocking
+  assignments to same variable)
+- MMCME2_ADV.v: Rename specparam PATHPULSE$ to PATHPULSE_ since
+  Verilator does not support $ in identifiers
+---
+ verilog/src/unisims/FDRE.v       | 10 +++++-----
+ verilog/src/unisims/MMCME2_ADV.v |  2 +-
+ 2 files changed, 6 insertions(+), 6 deletions(-)
+
+diff --git a/verilog/src/unisims/FDRE.v b/verilog/src/unisims/FDRE.v
+index 6f3fb7f..c16ec60 100644
+--- a/verilog/src/unisims/FDRE.v
++++ b/verilog/src/unisims/FDRE.v
+@@ -68,14 +68,14 @@ module FDRE #(
+ // begin behavioral model
+ 
+   reg Q_out;
++  wire Q_gsr = glblGSR ? INIT : Q_out;
+ 
+-  assign #100 Q = Q_out;
++  assign #100 Q = Q_gsr;
+ 
++    // Note: deprecated assign/deassign; model GSR explicitly.
+     always @(glblGSR)
+-      if (glblGSR) 
+-        assign Q_out = INIT;
+-      else
+-        deassign Q_out;
++      if (glblGSR)
++        Q_out <= INIT;
+ 
+ `ifdef XIL_TIMING
+ generate
+diff --git a/verilog/src/unisims/MMCME2_ADV.v b/verilog/src/unisims/MMCME2_ADV.v
+index 7b08f56..3eb57ba 100644
+--- a/verilog/src/unisims/MMCME2_ADV.v
++++ b/verilog/src/unisims/MMCME2_ADV.v
+@@ -4509,7 +4509,7 @@ endfunction
+     $width (posedge PWRDWN, 0:0:0, 0, notifier);
+     $width (posedge RST, 0:0:0, 0, notifier);
+ `endif
+-    specparam PATHPULSE$ = 0;
++    specparam PATHPULSE_ = 0;
+   endspecify
+ `endif
+ endmodule
+-- 
+2.52.0
+
