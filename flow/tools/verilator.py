@@ -138,18 +138,18 @@ def simulate(
         cwd: Optional[Path] = None,
         include_dirs: Optional[List[Path]] = None,
         defines: Optional[Dict[str, str]] = None,
-        wave_do: Optional[Path] = None,
-        sdf: Optional[Dict[str, Path]] = None,
+        _wave_do: Optional[Path] = None,  # Unused, kept for API compatibility
+        _sdf: Optional[Dict[str, Path]] = None,  # Unused, kept for API compatibility
         vcd_out: Optional[Path] = None,
-        saif_out: Optional[Path] = None,
-        log_all: bool = False,
-        run_on_start: bool = True,
-        batch_mode: bool = False,
+        _saif_out: Optional[Path] = None,  # Unused, kept for API compatibility
+        _log_all: bool = False,  # Unused, kept for API compatibility
+        _run_on_start: bool = True,  # Unused, kept for API compatibility
+        _batch_mode: bool = False,  # Unused, kept for API compatibility
         timescale: str = "1ps/1fs",
         plusargs: Optional[Dict[str, str]] = None,
-        netlist_sim = None,
-        libs: Optional[List] = None,
-        hide_mig_timingcheck_msg: bool = False,
+        _netlist_sim = None,  # Unused, kept for API compatibility
+        _libs: Optional[List] = None,  # Unused, kept for API compatibility
+        _hide_mig_timingcheck_msg: bool = False,  # Unused, kept for API compatibility
         ):
     """Run simulation with Verilator"""
     if cwd is None:
@@ -158,9 +158,8 @@ def simulate(
     # Initialize mutable defaults
     include_dirs = include_dirs or []
     defines = defines or {}
-    sdf = sdf or {}
     plusargs = plusargs or {}
-    libs = libs or []
+    # Note: _sdf and _libs are unused but kept for API compatibility
     
     # Validate top_modules before compilation
     if not top_modules:
