@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: SHL-2.1
-// SPDX-FileCopyrightText: 2024 RVLab Contributors
+// SPDX-FileCopyrightText: 2026 RVLab Contributors
 
 module tlul_test_host (
     input  logic              clk_i,
