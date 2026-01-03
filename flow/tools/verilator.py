@@ -138,18 +138,18 @@ def simulate(
         cwd: Optional[Path] = None,
         include_dirs: Optional[List[Path]] = None,
         defines: Optional[Dict[str, str]] = None,
-        _wave_do: Optional[Path] = None,  # Unused, kept for API compatibility
-        _sdf: Optional[Dict[str, Path]] = None,  # Unused, kept for API compatibility
+        wave_do: Optional[Path] = None,  # Unused, kept for API compatibility
+        sdf: Optional[Dict[str, Path]] = None,  # Unused, kept for API compatibility
         vcd_out: Optional[Path] = None,
-        _saif_out: Optional[Path] = None,  # Unused, kept for API compatibility
-        _log_all: bool = False,  # Unused, kept for API compatibility
-        _run_on_start: bool = True,  # Unused, kept for API compatibility
-        _batch_mode: bool = False,  # Unused, kept for API compatibility
+        saif_out: Optional[Path] = None,  # Unused, kept for API compatibility
+        log_all: bool = False,  # Unused, kept for API compatibility
+        run_on_start: bool = True,  # Unused, kept for API compatibility
+        batch_mode: bool = False,  # Unused, kept for API compatibility
         timescale: str = "1ps/1fs",
         plusargs: Optional[Dict[str, str]] = None,
-        _netlist_sim = None,  # Unused, kept for API compatibility
-        _libs: Optional[List] = None,  # Unused, kept for API compatibility
-        _hide_mig_timingcheck_msg: bool = False,  # Unused, kept for API compatibility
+        netlist_sim = None,  # Unused, kept for API compatibility
+        libs: Optional[List] = None,  # Unused, kept for API compatibility
+        hide_mig_timingcheck_msg: bool = False,  # Unused, kept for API compatibility
         ):
     """Run simulation with Verilator"""
     if cwd is None:
