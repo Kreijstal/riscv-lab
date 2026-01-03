@@ -46,7 +46,7 @@ def find_toolchain_prefix():
                     # as it doesn't use shell=True. The prefix is validated above.
                     cmd = [f"{prefix}gcc", "-march=rv32imc_zicsr", "-mabi=ilp32", 
                            "-c", test_file, "-o", "/dev/null"]
-                    result = subprocess.run(cmd, capture_output=True, text=True)
+                    result = subprocess.run(cmd, capture_output=True, text=True)  # nosec: B603 - using list arguments, not shell=True
                     
                     if result.returncode == 0:
                         return prefix, zicsr_compat
@@ -54,7 +54,7 @@ def find_toolchain_prefix():
                         # Try without zicsr extension
                         cmd = [f"{prefix}gcc", "-march=rv32imc", "-mabi=ilp32", 
                                "-c", test_file, "-o", "/dev/null"]
-                        result = subprocess.run(cmd, capture_output=True, text=True)
+                        result = subprocess.run(cmd, capture_output=True, text=True)  # nosec: B603 - using list arguments, not shell=True
                         if result.returncode == 0:
                             # Toolchain supports rv32imc but not zicsr
                             return prefix, False

@@ -123,13 +123,13 @@ def compile(
     
     full_cmd = verilator_cmd + verilator_opts
     print(f"Running Verilator compile command:\n{shlex.join(full_cmd)}")
-    subprocess.check_call(full_cmd, cwd=cwd)
+    subprocess.check_call(full_cmd, cwd=cwd)  # nosec: B603 - using list arguments, not shell=True
 
     # Build the simulation
     executable_basename = f"V{top_module}"
     make_cmd = ["make", "-j", "-C", "obj_dir", "-f", f"{executable_basename}.mk", executable_basename]
     print(f"Building Verilator simulation:\n{shlex.join(make_cmd)}")
-    subprocess.check_call(make_cmd, cwd=cwd)
+    subprocess.check_call(make_cmd, cwd=cwd)  # nosec: B603 - using list arguments, not shell=True
 
 def simulate(
         src_files: List[Path],
@@ -208,7 +208,7 @@ def simulate(
             cwd=cwd,
             text=True,
             check=True
-        )
+        )  # nosec: B603 - using list arguments, not shell=True
         print(f"Verilator simulation completed successfully (return code {result.returncode}).")
         if vcd_out:
             # The default trace file from Verilator's --main is trace.vcd in the CWD.
