@@ -212,7 +212,12 @@ jobs:
           ghdl-llvm:p
           iverilog:p
           python-pip:p
-          python-{sphinx,sphinx_rtd_theme,hjson,mako,pyelftools,lxml}:p
+          python-sphinx:p
+          python-sphinx_rtd_theme:p
+          python-hjson:p
+          python-mako:p
+          python-pyelftools:p
+          python-lxml:p
           riscv64-unknown-elf-gcc:p
           verilator:p
 
