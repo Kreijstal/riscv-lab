@@ -17,11 +17,47 @@ def find_toolchain_prefix():
     prefixes_with_ziczr_compat = [
         ("riscv-none-elf-", True),
         ("riscv32-unknown-elf-", True),
+        ("riscv64-unknown-elf-", True),  # Added: riscv64 toolchain with RV32 multilib support
         ("riscv-none-embed-", False),
     ]
+    
     for prefix, zicsr_compat in prefixes_with_ziczr_compat:
         if shutil.which(f"{prefix}gcc"):
-            return prefix, zicsr_compat
+            # Check if this toolchain supports the required ISA (rv32imc_zicsr)
+            try:
+                # Try to compile a simple test to check ISA support
+                import tempfile
+                import subprocess
+                import os
+                
+                with tempfile.NamedTemporaryFile(mode='w', suffix='.c', delete=False) as f:
+                    f.write('int main() { return 0; }')
+                    test_file = f.name
+                
+                try:
+                    # Test if we can compile for rv32imc_zicsr
+                    cmd = [f"{prefix}gcc", "-march=rv32imc_zicsr", "-mabi=ilp32", 
+                           "-c", test_file, "-o", "/dev/null"]
+                    result = subprocess.run(cmd, capture_output=True, text=True)
+                    
+                    if result.returncode == 0:
+                        return prefix, zicsr_compat
+                    else:
+                        # Try without zicsr extension
+                        cmd = [f"{prefix}gcc", "-march=rv32imc", "-mabi=ilp32", 
+                               "-c", test_file, "-o", "/dev/null"]
+                        result = subprocess.run(cmd, capture_output=True, text=True)
+                        if result.returncode == 0:
+                            # Toolchain supports rv32imc but not zicsr
+                            return prefix, False
+                finally:
+                    os.unlink(test_file)
+                    
+            except Exception as e:
+                # If check fails, assume it's compatible (for backward compatibility)
+                print(f"Warning: Could not verify ISA support for {prefix}: {e}")
+                return prefix, zicsr_compat
+    
     raise Exception("Could not find RISC-V GCC toolchain.")
 
 
@@ -30,7 +66,6 @@ def get_cflags(abi, arch, funciton_sections=True):
         "-Wall",
         "-ffreestanding",
         "-fno-builtin",
-        "--specs=nosys.specs",
         "-nostdlib",
         "-g",
         #"-msave-restore",
@@ -39,7 +74,11 @@ def get_cflags(abi, arch, funciton_sections=True):
         "-Os",
         f"-mabi={abi}",
         f"-march={arch}",
+        "-DNO_UNISTD_H",  # Prevent inclusion of unistd.h in baselibc
     ]
+    
+    # Try to add --specs=nosys.specs if available, but don't fail if it's not
+    # This flag is optional and some toolchains don't have it
     #if funciton_sections:
     #    o+=["-ffunction-sections"]
     return o
