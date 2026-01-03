@@ -1,39 +1,19 @@
 # SPDX-FileCopyrightText: 2026 RVLab Contributors
 # SPDX-License-Identifier: Apache-2.0
 
-From f1cdfd3656f1e4077dc685015be8e44debe98099 Mon Sep 17 00:00:00 2001
-From: Kreijstal <rainb@tfwno.gf>
-Date: Sat, 3 Jan 2026 16:18:21 +0100
-Subject: [PATCH] Verilator compatibility fixes for FDRE and MMCME2_ADV
-
-- FDRE.v: Replace deprecated assign/deassign with explicit GSR mux
-  to avoid Verilator BLKANDNBLK error (mixing blocking and non-blocking
-  assignments to same variable)
-- MMCME2_ADV.v: Rename specparam PATHPULSE$ to PATHPULSE_ since
-  Verilator does not support $ in identifiers
-- MMCME2_ADV.v: Change clk1_div through clk6_div and divclk_div from
-  reg [7:0] to real for proper division calculations
-- MMCME2_ADV.v: Change mx output from [1:0] to [2:0] in several tasks
-  to match the actual bit range being extracted (DI[9:8] is 2 bits but
-  needs 3-bit container)
----
- verilog/src/unisims/FDRE.v       | 10 +++++-----
- verilog/src/unisims/MMCME2_ADV.v | 26 +++++++++++++-------------
- 2 files changed, 18 insertions(+), 18 deletions(-)
-
 diff --git a/verilog/src/unisims/FDRE.v b/verilog/src/unisims/FDRE.v
 index 6f3fb7f..c16ec60 100644
 --- a/verilog/src/unisims/FDRE.v
 +++ b/verilog/src/unisims/FDRE.v
 @@ -68,14 +68,14 @@ module FDRE #(
  // begin behavioral model
-
+ 
    reg Q_out;
 +  wire Q_gsr = glblGSR ? INIT : Q_out;
-
+ 
 -  assign #100 Q = Q_out;
 +  assign #100 Q = Q_gsr;
-
+ 
 +    // Note: deprecated assign/deassign; model GSR explicitly.
      always @(glblGSR)
 -      if (glblGSR) 
@@ -42,7 +22,7 @@ index 6f3fb7f..c16ec60 100644
 -        deassign Q_out;
 +      if (glblGSR)
 +        Q_out <= INIT;
-
+ 
  `ifdef XIL_TIMING
  generate
 diff --git a/verilog/src/unisims/MMCME2_ADV.v b/verilog/src/unisims/MMCME2_ADV.v
@@ -95,8 +75,8 @@ index 7b08f56..8555b13 100644
      output reg       nc;
      output reg [5:0] dt;
 @@ -3891,7 +3891,7 @@ end
- endtask
-
+ endtask 
+ 
  task upper_drp;
 -    output reg [1:0] mx;
 +    output reg [2:0] mx;
@@ -121,5 +101,3 @@ index 7b08f56..8555b13 100644
    endspecify
  `endif
  endmodule
--- 
-2.52.0
