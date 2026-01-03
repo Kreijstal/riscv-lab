@@ -90,7 +90,7 @@ jobs:
       run: |
         echo "Running Verilator system testbench..."
         # First build the software for the system testbench
-        flow sw_student.build
+        flow sw_minimal.build
         
         # Run the system-level testbench with Verilator
         flow systb_minimal.sim_rtl_verilator
