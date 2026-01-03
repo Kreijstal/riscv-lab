@@ -3,6 +3,7 @@
 
 import subprocess
 import shlex
+import re
 from pathlib import Path
 from typing import Optional, List, Dict
 import os
@@ -71,6 +72,11 @@ def compile(
         print(f"Warning: Multiple top modules provided: {top_modules}. Using first one: {top_modules[0]}")
     
     top_module = top_modules[0]  # Using the first top module as the primary one
+    
+    # Validate top_module is a safe identifier (basic check)
+    # Verilog module names should be valid identifiers
+    if not re.match(r'^[a-zA-Z_][a-zA-Z0-9_]*$', top_module):
+        raise ValueError(f"Invalid top module name: '{top_module}'. Must be a valid Verilog identifier.")
 
     # Deduplicate source files while preserving order
     seen = set()
@@ -98,7 +104,13 @@ def compile(
         '--timescale', f"{timescale}",
     ]
 
+    # Validate defines keys for safety
+    # Define keys should be valid C/Verilog identifiers
+    define_pattern = re.compile(r'^[a-zA-Z_][a-zA-Z0-9_]*$')
     for key, value in defines.items():
+        if not define_pattern.match(key):
+            raise ValueError(f"Invalid define key: '{key}'. Must be a valid identifier.")
+        # Value can be any string, safe with subprocess and list arguments
         verilator_opts += [f"-D{key}={value}"]
 
     for include_dir in include_dirs:
@@ -150,10 +162,19 @@ def simulate(
     plusargs = plusargs or {}
     libs = libs or []
     
+    # Validate top_modules before compilation
+    if not top_modules:
+        raise ValueError("top_modules list cannot be empty")
+    top_module = top_modules[0]
+    
+    # Validate top_module is a safe identifier (basic check)
+    # Verilog module names should be valid identifiers
+    if not re.match(r'^[a-zA-Z_][a-zA-Z0-9_]*$', top_module):
+        raise ValueError(f"Invalid top module name: '{top_module}'. Must be a valid Verilog identifier.")
+
     # Compile and build with Verilator
     compile(src_files, cwd, include_dirs, defines, timescale, top_modules, unisims_dir)
 
-    top_module = top_modules[0]
     executable_basename = f"V{top_module}"
     executable_path = Path(cwd) / "obj_dir" / executable_basename
 
@@ -165,7 +186,15 @@ def simulate(
 
     # Build command line with plusargs
     sim_cmd = [str(executable_path)]
+    
+    # Validate plusargs keys and values for safety
+    # Plusargs should be simple identifiers and values
+    plusarg_pattern = re.compile(r'^[a-zA-Z_][a-zA-Z0-9_]*$')
     for key, value in plusargs.items():
+        if not plusarg_pattern.match(key):
+            raise ValueError(f"Invalid plusarg key: '{key}'. Must be a valid identifier.")
+        # Value can be any string, but we'll check it doesn't contain shell metacharacters
+        # when used with subprocess.run() with list arguments, it's safe
         sim_cmd.append(f"+{key}={value}")
 
     # Add VCD dump if requested

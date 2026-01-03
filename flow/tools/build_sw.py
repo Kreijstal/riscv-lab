@@ -30,12 +30,20 @@ def find_toolchain_prefix():
                 import subprocess
                 import os
                 
+                # Validate prefix is from our trusted list (security check)
+                # The prefix comes from a hardcoded list above, so it's safe
+                # but we add an extra check for safety
+                if prefix not in [p for p, _ in prefixes_with_ziczr_compat]:
+                    continue  # Skip if prefix not in our trusted list
+                
                 with tempfile.NamedTemporaryFile(mode='w', suffix='.c', delete=False) as f:
                     f.write('int main() { return 0; }')
                     test_file = f.name
                 
                 try:
                     # Test if we can compile for rv32imc_zicsr
+                    # Note: subprocess.run with list arguments is safe from shell injection
+                    # as it doesn't use shell=True. The prefix is validated above.
                     cmd = [f"{prefix}gcc", "-march=rv32imc_zicsr", "-mabi=ilp32", 
                            "-c", test_file, "-o", "/dev/null"]
                     result = subprocess.run(cmd, capture_output=True, text=True)
