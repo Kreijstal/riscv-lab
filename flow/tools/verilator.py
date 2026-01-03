@@ -161,6 +161,13 @@ def simulate(
             check=True
         )
         print(f"Verilator simulation completed successfully (return code {result.returncode}).")
+        if vcd_out:
+            # The default trace file from Verilator's --main is trace.vcd in the CWD.
+            default_vcd = cwd / "trace.vcd"
+            if default_vcd.is_file():
+                vcd_out.parent.mkdir(parents=True, exist_ok=True)
+                default_vcd.rename(vcd_out)
+                print(f"VCD trace file moved to {vcd_out}")
     except subprocess.CalledProcessError as e:
         print(f"ERROR: Verilator simulation failed with return code {e.returncode}.", file=sys.stderr)
         raise
