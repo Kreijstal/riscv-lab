@@ -94,6 +94,7 @@ def compile(
         '--Wno-fatal',
         '--Wno-EOFNEWLINE',
         '--bbox-unsup',  # Blackbox modules with unsupported constructs like 'deassign'
+        '--bbox-sys',    # Blackbox unknown $system calls
         '--timing',
         '--binary',
         '--trace',
