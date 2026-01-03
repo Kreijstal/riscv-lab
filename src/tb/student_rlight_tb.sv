@@ -33,6 +33,8 @@ module student_rlight_tb;
     
   initial begin
     logic [31:0] rdata;
+    $dumpfile("trace.vcd");
+    $dumpvars(0, student_rlight_tb);
     bus.reset();
 
     // write and read pattern register 2x:

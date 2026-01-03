@@ -62,6 +62,8 @@ module student_tlul_mux_tb;
 
     logic [31:0] expected_value;
 
+    $dumpfile("trace.vcd");
+    $dumpvars(0, student_tlul_mux_tb);
     bus.reset();
     errcnt = '0;
 

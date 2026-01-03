@@ -224,6 +224,8 @@ module system_tb;
 
   initial begin
     string sw_mem_filename;
+    $dumpfile("trace.vcd");
+    $dumpvars(0, system_tb);
 
     tests.test_idcode();
     tests.test_dtmcs();
