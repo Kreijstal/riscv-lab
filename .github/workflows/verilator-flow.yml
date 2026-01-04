@@ -215,8 +215,6 @@ jobs:
       run: |
         python -m pip install --upgrade pip
         python -m pip install pydesignflow notcl
-        python -m pip install amaranth
-        python -m pip install --no-binary=cocotb cocotb
 
     - name: Initialize XilinxUnisimLibrary submodule
       shell: msys2 {0}
