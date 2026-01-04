@@ -36,16 +36,6 @@ jobs:
           git \
           perl
         
-    - name: Create riscv32 symlinks for riscv64 toolchain
-      run: |
-        # Create symlinks for riscv32-unknown-elf- prefix to point to riscv64-unknown-elf-
-        # This is needed because the flow expects riscv32-unknown-elf- prefix
-        for tool in gcc g++ as ld ar objcopy objdump readelf size strings nm strip; do
-          if [ -f /usr/bin/riscv64-unknown-elf-$tool ]; then
-            sudo ln -sf /usr/bin/riscv64-unknown-elf-$tool /usr/bin/riscv32-unknown-elf-$tool
-          fi
-        done
-        
     - name: Install Python dependencies
       run: |
         python -m pip install --upgrade pip
@@ -83,98 +73,14 @@ jobs:
         echo "OSS_CAD_BIN=$(pwd)/oss-cad-suite/bin" >> "$GITHUB_ENV"
 
     - name: Run Verilator module testbench
-      id: run-module-test
       run: |
-        echo "Running Verilator module testbench..."
-        # Run the module-level testbench with Verilator
-        # This should create a VCD file if successful
         flow student_rlight_tb.sim_rtl_verilator
-        
-        # Check if VCD file was created
-        # Based on verilator.py, the VCD file should be at build/student_rlight_tb/sim_rtl_verilator/trace.vcd
-        # or moved to the specified vcd_out location
-        VCD_PATH="build/student_rlight_tb/sim_rtl_verilator/trace.vcd"
-        if [ -f "$VCD_PATH" ]; then
-          echo "✅ Module testbench VCD file created: $VCD_PATH"
-          echo "MODULE_VCD_SIZE=$(stat -c%s "$VCD_PATH")" >> $GITHUB_OUTPUT
-          echo "MODULE_VCD_EXISTS=true" >> $GITHUB_OUTPUT
-        else
-          # Check for alternative VCD locations
-          ALT_VCD=$(find build -name "*.vcd" -type f | head -1)
-          if [ -n "$ALT_VCD" ]; then
-            echo "✅ Module testbench VCD file found at alternative location: $ALT_VCD"
-            echo "MODULE_VCD_SIZE=$(stat -c%s "$ALT_VCD")" >> $GITHUB_OUTPUT
-            echo "MODULE_VCD_EXISTS=true" >> $GITHUB_OUTPUT
-          else
-            echo "❌ No module testbench VCD file found"
-            echo "MODULE_VCD_EXISTS=false" >> $GITHUB_OUTPUT
-            exit 1
-          fi
-        fi
+        test -f build/student_rlight_tb/sim_rtl_verilator/trace.vcd
         
     - name: Run Verilator system testbench
-      id: run-system-test
       run: |
-        echo "Running Verilator system testbench..."
         flow systb_minimal.sim_rtl_verilator
-        
-        # Check if VCD file was created for system testbench
-        # Look for VCD files in the system testbench build directory
-        SYS_VCD_PATH="build/systb_minimal/sim_rtl_verilator/trace.vcd"
-        if [ -f "$SYS_VCD_PATH" ]; then
-          echo "✅ System testbench VCD file created: $SYS_VCD_PATH"
-          echo "SYS_VCD_SIZE=$(stat -c%s "$SYS_VCD_PATH")" >> $GITHUB_OUTPUT
-          echo "SYS_VCD_EXISTS=true" >> $GITHUB_OUTPUT
-        else
-          # Check for alternative VCD locations in system testbench directory
-          ALT_SYS_VCD=$(find build/systb_minimal -name "*.vcd" -type f | head -1)
-          if [ -n "$ALT_SYS_VCD" ]; then
-            echo "✅ System testbench VCD file found at alternative location: $ALT_SYS_VCD"
-            echo "SYS_VCD_SIZE=$(stat -c%s "$ALT_SYS_VCD")" >> $GITHUB_OUTPUT
-            echo "SYS_VCD_EXISTS=true" >> $GITHUB_OUTPUT
-          else
-            echo "⚠️  No system testbench VCD file found (this might be expected for some configurations)"
-            echo "SYS_VCD_EXISTS=false" >> $GITHUB_OUTPUT
-          fi
-        fi
-        
-    - name: Verify module VCD file
-      if: steps.run-module-test.outputs.MODULE_VCD_EXISTS == 'true'
-      run: |
-        echo "Module VCD file size: ${{ steps.run-module-test.outputs.MODULE_VCD_SIZE }} bytes"
-        # Basic VCD file validation - check it's not empty and has some content
-        VCD_PATH=$(find build -name "*.vcd" -type f | head -1)
-        if [ -s "$VCD_PATH" ]; then
-          echo "✅ Module VCD file is not empty"
-          # Check if it contains typical VCD headers
-          if head -5 "$VCD_PATH" | grep -q "\$date\|$enddefinitions"; then
-            echo "✅ Module VCD file appears to be valid"
-          else
-            echo "⚠️  Module VCD file may be malformed"
-          fi
-        else
-          echo "❌ Module VCD file is empty"
-          exit 1
-        fi
-        
-    - name: Verify system VCD file
-      if: steps.run-system-test.outputs.SYS_VCD_EXISTS == 'true'
-      run: |
-        echo "System VCD file size: ${{ steps.run-system-test.outputs.SYS_VCD_SIZE }} bytes"
-        # Basic VCD file validation - check it's not empty and has some content
-        SYS_VCD_PATH=$(find build/systb_minimal -name "*.vcd" -type f | head -1)
-        if [ -n "$SYS_VCD_PATH" ] && [ -s "$SYS_VCD_PATH" ]; then
-          echo "✅ System VCD file is not empty"
-          # Check if it contains typical VCD headers
-          if head -5 "$SYS_VCD_PATH" | grep -q "\$date\|$enddefinitions"; then
-            echo "✅ System VCD file appears to be valid"
-          else
-            echo "⚠️  System VCD file may be malformed"
-          fi
-        elif [ -n "$SYS_VCD_PATH" ]; then
-          echo "❌ System VCD file is empty"
-          exit 1
-        fi
+        test -f build/systb_minimal/sim_rtl_verilator/trace.vcd
         
     - name: Archive VCD files
       uses: actions/upload-artifact@v4
@@ -228,7 +134,6 @@ jobs:
         PYTHONIOENCODING: utf-8
         PYTHONUTF8: 1
       run: |
-        echo "Running Verilator module testbench..."
         flow student_rlight_tb.sim_rtl_verilator
 
     - name: Run Verilator system testbench
@@ -237,5 +142,4 @@ jobs:
         PYTHONIOENCODING: utf-8
         PYTHONUTF8: 1
       run: |
-        echo "Running Verilator system testbench..."
         flow systb_minimal.sim_rtl_verilator
