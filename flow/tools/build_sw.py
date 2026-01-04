@@ -39,27 +39,36 @@ def find_toolchain_prefix():
                 with tempfile.NamedTemporaryFile(mode='w', suffix='.c', delete=False) as f:
                     f.write('int main() { return 0; }')
                     test_file = f.name
-                
+
+                # Create a temp file for output (cross-platform, /dev/null doesn't work on Windows)
+                out_file = test_file + '.o'
+
                 try:
                     # Test if we can compile for rv32imc_zicsr
                     # Note: subprocess.run with list arguments is safe from shell injection
                     # as it doesn't use shell=True. The prefix is validated above.
-                    cmd = [f"{prefix}gcc", "-march=rv32imc_zicsr", "-mabi=ilp32", 
-                           "-c", test_file, "-o", "/dev/null"]
+                    cmd = [f"{prefix}gcc", "-march=rv32imc_zicsr", "-mabi=ilp32",
+                           "-c", test_file, "-o", out_file]
                     result = subprocess.run(cmd, capture_output=True, text=True)  # nosec: B603 - using list arguments, not shell=True
-                    
+
                     if result.returncode == 0:
+                        if os.path.exists(out_file):
+                            os.unlink(out_file)
                         return prefix, zicsr_compat
                     else:
                         # Try without zicsr extension
-                        cmd = [f"{prefix}gcc", "-march=rv32imc", "-mabi=ilp32", 
-                               "-c", test_file, "-o", "/dev/null"]
+                        cmd = [f"{prefix}gcc", "-march=rv32imc", "-mabi=ilp32",
+                               "-c", test_file, "-o", out_file]
                         result = subprocess.run(cmd, capture_output=True, text=True)  # nosec: B603 - using list arguments, not shell=True
                         if result.returncode == 0:
+                            if os.path.exists(out_file):
+                                os.unlink(out_file)
                             # Toolchain supports rv32imc but not zicsr
                             return prefix, False
                 finally:
                     os.unlink(test_file)
+                    if os.path.exists(out_file):
+                        os.unlink(out_file)
                     
             except Exception as e:
                 # If check fails, assume it's compatible (for backward compatibility)
