@@ -200,6 +200,7 @@ jobs:
         update: true
         install: base-devel git
         pacboy: >-
+          cc:p
           python-pip:p
           python-sphinx:p
           python-sphinx_rtd_theme:p
