@@ -237,3 +237,13 @@ jobs:
       run: |
         echo "Running Verilator module testbench..."
         flow student_rlight_tb.sim_rtl_verilator
+
+    - name: Run Verilator system testbench
+      shell: msys2 {0}
+      env:
+        PYTHONIOENCODING: utf-8
+        PYTHONUTF8: 1
+      run: |
+        echo "Running Verilator system testbench..."
+        flow sw_minimal.build
+        flow systb_minimal.sim_rtl_verilator
