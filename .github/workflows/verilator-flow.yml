@@ -5,9 +5,9 @@ name: Verilator Flow Test
 
 on:
   push:
-    branches: [ main, master, verilator ]
+    branches: [ main ]
   pull_request:
-    branches: [ main, master ]
+    branches: [ main ]
 
 jobs:
   verilator-flow:
@@ -186,7 +186,7 @@ jobs:
   windows-build:
     strategy:
       matrix:
-        sys: [MINGW64, UCRT64]
+        sys: [MINGW64, UCRT64, CLANG64]
     runs-on: windows-latest
     steps:
     - uses: actions/checkout@v6
@@ -200,8 +200,6 @@ jobs:
         update: true
         install: base-devel git
         pacboy: >-
-          ghdl-llvm:p
-          iverilog:p
           python-pip:p
           python-sphinx:p
           python-sphinx_rtd_theme:p
