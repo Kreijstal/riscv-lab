@@ -14,67 +14,59 @@ cfg_arch = "rv32imc_zicsr"
 cfg_abi  = "ilp32"
 
 def find_toolchain_prefix():
-    prefixes_with_ziczr_compat = [
-        ("riscv-none-elf-", True),
-        ("riscv32-unknown-elf-", True),
-        ("riscv64-unknown-elf-", True),  # Added: riscv64 toolchain with RV32 multilib support
-        ("riscv-none-embed-", False),
+    # List of (prefix, zicsr_compat, needs_multilib_test)
+    # riscv32 toolchains don't need multilib test - they're already 32-bit
+    # riscv64 needs test to verify rv32 multilib support
+    prefixes = [
+        ("riscv32-unknown-elf-", True, False),
+        ("riscv-none-elf-", True, False),
+        ("riscv64-unknown-elf-", True, True),  # needs multilib test
+        ("riscv-none-embed-", False, False),
     ]
-    
-    for prefix, zicsr_compat in prefixes_with_ziczr_compat:
-        if shutil.which(f"{prefix}gcc"):
-            # Check if this toolchain supports the required ISA (rv32imc_zicsr)
+
+    for prefix, zicsr_compat, needs_test in prefixes:
+        if not shutil.which(f"{prefix}gcc"):
+            continue
+
+        # For riscv32 toolchains, no need to test - they support rv32 by definition
+        if not needs_test:
+            return prefix, zicsr_compat
+
+        # For riscv64, test if rv32 multilib is available
+        try:
+            import tempfile
+            import os
+
+            with tempfile.NamedTemporaryFile(mode='w', suffix='.c', delete=False) as f:
+                f.write('int main() { return 0; }')
+                test_file = f.name
+
+            out_file = test_file + '.o'
+
             try:
-                # Try to compile a simple test to check ISA support
-                import tempfile
-                import subprocess
-                import os
-                
-                # Validate prefix is from our trusted list (security check)
-                # The prefix comes from a hardcoded list above, so it's safe
-                # but we add an extra check for safety
-                if prefix not in [p for p, _ in prefixes_with_ziczr_compat]:
-                    continue  # Skip if prefix not in our trusted list
-                
-                with tempfile.NamedTemporaryFile(mode='w', suffix='.c', delete=False) as f:
-                    f.write('int main() { return 0; }')
-                    test_file = f.name
+                cmd = [f"{prefix}gcc", "-march=rv32imc_zicsr", "-mabi=ilp32",
+                       "-c", test_file, "-o", out_file]
+                result = subprocess.run(cmd, capture_output=True, text=True)
 
-                # Create a temp file for output (cross-platform, /dev/null doesn't work on Windows)
-                out_file = test_file + '.o'
+                if result.returncode == 0:
+                    return prefix, zicsr_compat
 
-                try:
-                    # Test if we can compile for rv32imc_zicsr
-                    # Note: subprocess.run with list arguments is safe from shell injection
-                    # as it doesn't use shell=True. The prefix is validated above.
-                    cmd = [f"{prefix}gcc", "-march=rv32imc_zicsr", "-mabi=ilp32",
-                           "-c", test_file, "-o", out_file]
-                    result = subprocess.run(cmd, capture_output=True, text=True)  # nosec: B603 - using list arguments, not shell=True
-
-                    if result.returncode == 0:
-                        if os.path.exists(out_file):
-                            os.unlink(out_file)
-                        return prefix, zicsr_compat
-                    else:
-                        # Try without zicsr extension
-                        cmd = [f"{prefix}gcc", "-march=rv32imc", "-mabi=ilp32",
-                               "-c", test_file, "-o", out_file]
-                        result = subprocess.run(cmd, capture_output=True, text=True)  # nosec: B603 - using list arguments, not shell=True
-                        if result.returncode == 0:
-                            if os.path.exists(out_file):
-                                os.unlink(out_file)
-                            # Toolchain supports rv32imc but not zicsr
-                            return prefix, False
-                finally:
+                # Try without zicsr
+                cmd = [f"{prefix}gcc", "-march=rv32imc", "-mabi=ilp32",
+                       "-c", test_file, "-o", out_file]
+                result = subprocess.run(cmd, capture_output=True, text=True)
+                if result.returncode == 0:
+                    return prefix, False
+            finally:
+                if os.path.exists(test_file):
                     os.unlink(test_file)
-                    if os.path.exists(out_file):
-                        os.unlink(out_file)
-                    
-            except Exception as e:
-                # If check fails, assume it's compatible (for backward compatibility)
-                print(f"Warning: Could not verify ISA support for {prefix}: {e}")
-                return prefix, zicsr_compat
-    
+                if os.path.exists(out_file):
+                    os.unlink(out_file)
+
+        except Exception as e:
+            print(f"Warning: Could not verify ISA support for {prefix}: {e}")
+            continue
+
     raise Exception("Could not find RISC-V GCC toolchain.")
 
 
