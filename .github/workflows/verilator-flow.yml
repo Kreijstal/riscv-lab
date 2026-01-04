@@ -116,10 +116,6 @@ jobs:
       id: run-system-test
       run: |
         echo "Running Verilator system testbench..."
-        # First build the software for the system testbench
-        flow sw_minimal.build
-        
-        # Run the system-level testbench with Verilator
         flow systb_minimal.sim_rtl_verilator
         
         # Check if VCD file was created for system testbench
@@ -245,5 +241,4 @@ jobs:
         PYTHONUTF8: 1
       run: |
         echo "Running Verilator system testbench..."
-        flow sw_minimal.build
         flow systb_minimal.sim_rtl_verilator
