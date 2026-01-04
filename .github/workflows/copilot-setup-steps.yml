@@ -42,13 +42,6 @@ jobs:
             git \
             perl
 
-      - name: Create riscv32 symlinks for riscv64 toolchain
-        run: |
-          for tool in gcc g++ as ld ar objcopy objdump readelf size strings nm strip; do
-            if [ -f /usr/bin/riscv64-unknown-elf-$tool ]; then
-              sudo ln -sf /usr/bin/riscv64-unknown-elf-$tool /usr/bin/riscv32-unknown-elf-$tool
-            fi
-          done
 
       - name: Install Python dependencies
         run: |
