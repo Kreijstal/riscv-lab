@@ -32,39 +32,16 @@ def find_toolchain_prefix():
         if not needs_test:
             return prefix, zicsr_compat
 
-        # For riscv64, test if rv32 multilib is available
+        # For riscv64, check if rv32 multilib is available via -print-multi-lib
         try:
-            import tempfile
-            import os
-
-            with tempfile.NamedTemporaryFile(mode='w', suffix='.c', delete=False) as f:
-                f.write('int main() { return 0; }')
-                test_file = f.name
-
-            out_file = test_file + '.o'
-
-            try:
-                cmd = [f"{prefix}gcc", "-march=rv32imc_zicsr", "-mabi=ilp32",
-                       "-c", test_file, "-o", out_file]
-                result = subprocess.run(cmd, capture_output=True, text=True)
-
-                if result.returncode == 0:
-                    return prefix, zicsr_compat
-
-                # Try without zicsr
-                cmd = [f"{prefix}gcc", "-march=rv32imc", "-mabi=ilp32",
-                       "-c", test_file, "-o", out_file]
-                result = subprocess.run(cmd, capture_output=True, text=True)
-                if result.returncode == 0:
-                    return prefix, False
-            finally:
-                if os.path.exists(test_file):
-                    os.unlink(test_file)
-                if os.path.exists(out_file):
-                    os.unlink(out_file)
-
+            result = subprocess.run(
+                [f"{prefix}gcc", "-print-multi-lib"],
+                capture_output=True, text=True
+            )
+            if result.returncode == 0 and "rv32" in result.stdout:
+                return prefix, zicsr_compat
         except Exception as e:
-            print(f"Warning: Could not verify ISA support for {prefix}: {e}")
+            print(f"Warning: Could not check multilib for {prefix}: {e}")
             continue
 
     raise Exception("Could not find RISC-V GCC toolchain.")
