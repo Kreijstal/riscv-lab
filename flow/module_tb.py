@@ -85,4 +85,4 @@ class ModuleTb(Block):
         """RTL simulation with Verilator"""
         self.simulate('verilator', cwd, srcs,
             unisims_dir=srcs.unisims_dir)
-            
+

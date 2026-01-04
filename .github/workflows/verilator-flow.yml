@@ -218,7 +218,7 @@ jobs:
           python-mako:p
           python-pyelftools:p
           python-lxml:p
-          riscv64-unknown-elf-gcc:p
+          riscv32-unknown-elf-gcc:p
           verilator:p
 
     - name: Install Python HDL packages
@@ -228,17 +228,6 @@ jobs:
         python -m pip install pydesignflow notcl
         python -m pip install amaranth
         python -m pip install --no-binary=cocotb cocotb
-
-    - name: Create riscv32 symlinks for riscv64 toolchain
-      shell: msys2 {0}
-      run: |
-        # Create symlinks for riscv32-unknown-elf- prefix to point to riscv64-unknown-elf-
-        # This is needed because the flow expects riscv32-unknown-elf- prefix
-        for tool in gcc g++ as ld ar objcopy objdump readelf size strings nm strip; do
-          if [ -f /usr/bin/riscv64-unknown-elf-$tool ]; then
-            sudo ln -sf /usr/bin/riscv64-unknown-elf-$tool /usr/bin/riscv32-unknown-elf-$tool
-          fi
-        done
 
     - name: Initialize XilinxUnisimLibrary submodule
       shell: msys2 {0}
