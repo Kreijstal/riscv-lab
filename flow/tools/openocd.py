@@ -159,7 +159,7 @@ class OpenOcd:
 
 @contextmanager
 def start(openocd_cfg):
-    proc = subprocess.Popen(f"xterm -e openocd -f {openocd_cfg}", shell=True)
+    proc = subprocess.Popen(["xterm", "-e", "openocd", "-f", openocd_cfg])
     time.sleep(1)
     try:
         with OpenOcd() as ocd:
