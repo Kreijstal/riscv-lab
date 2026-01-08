@@ -184,7 +184,7 @@ class OpenOcd:
 @contextmanager
 def start(openocd_cfg):
     if shutil.which('xterm') is not None:
-        proc = subprocess.Popen(["xterm", "-hold", "-e", f"openocd -f {openocd_cfg}"])
+        proc = subprocess.Popen(["xterm", "-e", "openocd", "-f", str(openocd_cfg)])
     else:
         proc = subprocess.Popen(["openocd", "-f", str(openocd_cfg)],
             stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
