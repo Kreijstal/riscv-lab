@@ -9,6 +9,29 @@ from typing import Optional, List, Dict
 import os
 import sys
 
+def macos_cxxflags() -> List[str]:
+    """Return C++ flags needed by Verilator's generated build on macOS."""
+    if sys.platform != "darwin":
+        return []
+
+    sdk_path = None
+    try:
+        result = subprocess.run(
+            ["xcrun", "--show-sdk-path"],
+            capture_output=True,
+            text=True,
+            check=True,
+        )
+        sdk_path = Path(result.stdout.strip())
+    except (FileNotFoundError, subprocess.CalledProcessError):
+        sdk_path = Path("/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk")
+
+    libcxx_include = sdk_path / "usr" / "include" / "c++" / "v1"
+    if not libcxx_include.exists():
+        return []
+
+    return ["-CFLAGS", f"-std=c++20 -isystem {libcxx_include}"]
+
 def find_verilator_executable() -> List[str]:
     """Find Verilator executable, handling Windows/MSYS2 environment"""
     if sys.platform == "win32":
@@ -104,6 +127,7 @@ def compile(
         '--top-module', top_module,
         '--timescale', f"{timescale}",
     ]
+    verilator_opts += macos_cxxflags()
 
     # Validate defines keys for safety
     # Define keys should be valid C/Verilog identifiers
