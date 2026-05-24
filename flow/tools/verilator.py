@@ -14,7 +14,6 @@ def macos_cxxflags() -> List[str]:
     if sys.platform != "darwin":
         return []
 
-    sdk_path = None
     try:
         result = subprocess.run(
             ["xcrun", "--show-sdk-path"],
@@ -28,9 +27,16 @@ def macos_cxxflags() -> List[str]:
 
     libcxx_include = sdk_path / "usr" / "include" / "c++" / "v1"
     if not libcxx_include.exists():
+        print(
+            f"Warning: could not locate libc++ headers under SDK path '{sdk_path}'. "
+            "C++ builds may fail due to missing standard library headers. "
+            "Ensure Xcode Command Line Tools are installed and that "
+            "'xcrun --show-sdk-path' succeeds.",
+            file=sys.stderr,
+        )
         return []
 
-    return ["-CFLAGS", f"-std=c++20 -isystem {libcxx_include}"]
+    return ["-CFLAGS", "-std=c++20", "-CFLAGS", f"-isystem {libcxx_include}"]
 
 def find_verilator_executable() -> List[str]:
     """Find Verilator executable, handling Windows/MSYS2 environment"""
