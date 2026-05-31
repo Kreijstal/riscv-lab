@@ -3,6 +3,7 @@
 
 from pydesignflow import Block, task, Result
 from .tools.vivado import Vivado
+from .tools import openxc7
 from .tools import pincheck
 import datetime
 from pathlib import Path
@@ -107,6 +108,58 @@ class RvlabFpgaTop(Block):
 
         return r
 
+    @task(requires={'srcs':'srcs.srcs_noddr'})
+    def syn_openxc7(self, cwd, srcs):
+        """Synthesize FPGA netlist with Yosys for openXC7/nextpnr."""
+
+        r = Result()
+        r.netlist_json = cwd / f"{self.name}.json"
+        r.edif = cwd / f"{self.name}.edif"
+
+        open_srcs = Result()
+        open_srcs.design_srcs = [
+            src for src in srcs.design_srcs
+            if "ddr3" not in src.parts
+            or src.name in {"rvlab_ddr_pkg.sv", "rvlab_tlul_ddr.sv"}
+        ]
+        open_srcs.defines = srcs.defines
+        open_srcs.include_dirs = srcs.include_dirs
+
+        openxc7.synth_xilinx(
+            cwd=cwd,
+            base_dir=self.flow.base_dir,
+            srcs=open_srcs,
+            top=self.name,
+            json_out=r.netlist_json,
+            edif_out=r.edif,
+        )
+
+        return r
+
+    @task(requires={'srcs':'srcs.srcs_noddr'})
+    def syn_openxc7_ddr(self, cwd, srcs):
+        """Synthesize DDR-enabled FPGA netlist with Yosys for openXC7/nextpnr."""
+
+        r = Result()
+        r.netlist_json = cwd / f"{self.name}.json"
+        r.edif = cwd / f"{self.name}.edif"
+
+        ddr_srcs = Result()
+        ddr_srcs.design_srcs = srcs.design_srcs
+        ddr_srcs.defines = srcs.defines | {'WITH_EXT_DRAM':'1'}
+        ddr_srcs.include_dirs = srcs.include_dirs
+
+        openxc7.synth_xilinx(
+            cwd=cwd,
+            base_dir=self.flow.base_dir,
+            srcs=ddr_srcs,
+            top=self.name,
+            json_out=r.netlist_json,
+            edif_out=r.edif,
+        )
+
+        return r
+
     @task(requires={'syn':'.syn'})
     def pnr(self, cwd, syn):
         """Place and route netlist"""
@@ -130,6 +183,48 @@ class RvlabFpgaTop(Block):
             t.write_sdf(r.sdf)
 
             self.vivado_generate_reports(cwd, r, t)
+
+        return r
+
+    @task(requires={'syn':'.syn_openxc7_ddr'})
+    def pnr_openxc7_ddr(self, cwd, syn):
+        """Place and route DDR-enabled netlist with nextpnr-xilinx."""
+
+        r = Result()
+        r.routed_json = cwd / f"{self.name}.routed.json"
+        r.fasm = cwd / f"{self.name}.fasm"
+
+        openxc7.place_and_route(
+            cwd=cwd,
+            base_dir=self.flow.base_dir,
+            part=self.part,
+            json_in=syn.netlist_json,
+            xdc_files=self.xdc_in,
+            json_out=r.routed_json,
+            fasm_out=r.fasm,
+            freq_mhz=25,
+        )
+
+        return r
+
+    @task(requires={'syn':'.syn_openxc7'})
+    def pnr_openxc7(self, cwd, syn):
+        """Place and route netlist with nextpnr-xilinx."""
+
+        r = Result()
+        r.routed_json = cwd / f"{self.name}.routed.json"
+        r.fasm = cwd / f"{self.name}.fasm"
+
+        openxc7.place_and_route(
+            cwd=cwd,
+            base_dir=self.flow.base_dir,
+            part=self.part,
+            json_in=syn.netlist_json,
+            xdc_files=self.xdc_in,
+            json_out=r.routed_json,
+            fasm_out=r.fasm,
+            freq_mhz=25,
+        )
 
         return r
 
@@ -227,6 +322,44 @@ class RvlabFpgaTop(Block):
 
             t.write_bitstream(r.bit_file)
             t.write_debug_probes(r.ltx_file)
+
+        return r
+
+    @task(requires={'pnr':'.pnr_openxc7'})
+    def bitstream_openxc7(self, cwd, pnr):
+        """Generate bitstream from openXC7 FASM."""
+
+        r = Result()
+        r.frames = cwd / f"{self.name}.frames"
+        r.bit_file = cwd / f"{self.name}.bit"
+
+        openxc7.bitstream(
+            cwd=cwd,
+            base_dir=self.flow.base_dir,
+            part=self.part,
+            fasm_in=pnr.fasm,
+            frames_out=r.frames,
+            bit_out=r.bit_file,
+        )
+
+        return r
+
+    @task(requires={'pnr':'.pnr_openxc7_ddr'})
+    def bitstream_openxc7_ddr(self, cwd, pnr):
+        """Generate DDR-enabled bitstream from openXC7 FASM."""
+
+        r = Result()
+        r.frames = cwd / f"{self.name}.frames"
+        r.bit_file = cwd / f"{self.name}.bit"
+
+        openxc7.bitstream(
+            cwd=cwd,
+            base_dir=self.flow.base_dir,
+            part=self.part,
+            fasm_in=pnr.fasm,
+            frames_out=r.frames,
+            bit_out=r.bit_file,
+        )
 
         return r
     
