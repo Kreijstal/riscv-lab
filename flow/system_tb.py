@@ -4,6 +4,7 @@
 from pydesignflow import Block, task, Result
 from .tools import questasim, xsim, vivado, verilator
 import shutil
+import os
 
 class SystemTb(Block):
     """System testbench"""
@@ -13,10 +14,15 @@ class SystemTb(Block):
         self.src_dir = self.flow.base_dir / "src"
         self.design_dir = self.src_dir / "design"
 
-    def simulate(self, simulator, cwd, srcs, sw, libs=[], netlist=None, sdf={}, batch=False, unisims_dir=None):
+    def simulate(
+            self, simulator, cwd, srcs, sw, libs=[], netlist=None, sdf={},
+            batch=False, unisims_dir=None, trace=True):
         """Generic function that is called by all sim_... tasks."""
 
         plusargs = {"jtag_prog_mem":sw.deltafile}
+        timeout_cycles = os.environ.get("RVLAB_SIM_TIMEOUT_CYCLES")
+        if timeout_cycles:
+            plusargs["rvlab_timeout_cycles"] = timeout_cycles
         top_modules = [self.name, 'glbl']
 
         verilog_srcs = srcs.design_srcs + srcs.tb_srcs
@@ -40,6 +46,7 @@ class SystemTb(Block):
             if unisims_dir is None:
                 raise ValueError("unisims_dir must be provided for Verilator simulation")
             kwargs['unisims_dir'] = unisims_dir
+            kwargs['trace'] = trace
         else:
             raise ValueError(f"Unknown simulator '{simulator}'")
         
@@ -182,6 +189,16 @@ class SystemTb(Block):
         """RTL simulation with Verilator"""
         self.simulate('verilator', cwd, srcs, sw,
             unisims_dir=srcs.unisims_dir)
+
+    @task(requires={
+        'srcs':'srcs.srcs_verilator',
+        'sw':'sw.delta',
+        })
+    def sim_rtl_verilator_ddr(self, cwd, srcs, sw):
+        """RTL simulation with Verilator including DDR3"""
+        self.simulate('verilator', cwd, srcs, sw,
+            unisims_dir=srcs.unisims_dir,
+            trace=False)
 
     @task(requires={
         'srcs':'srcs.srcs_noddr_verilator',

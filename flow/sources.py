@@ -129,6 +129,34 @@ class Sources(Block):
 
     @task(requires={
         'base_srcs':'.srcs_noddr',
+        'ddr3_model':'ddr3_model.generate_verilator',
+        }, always_rebuild=True, hidden=True)
+    def srcs_verilator(self, cwd, base_srcs, ddr3_model):
+        """RTL + verification sources including DDR3, with Verilator vendored dependencies"""
+        r = Result()
+
+        r.design_srcs = base_srcs.design_srcs
+        r.defines = base_srcs.defines | {'WITH_EXT_DRAM':'1'} | getattr(ddr3_model, "defines", {})
+        r.include_dirs = base_srcs.include_dirs + ddr3_model.include_dirs
+        r.xcis = base_srcs.xcis
+
+        r.unisims_dir = _get_prepared_unisims_dir(self.flow.base_dir)
+
+        unisims_repo = self.flow.base_dir / "vendor" / "XilinxUnisimLibrary"
+        vendored_glbl = unisims_repo / "verilog" / "src" / "glbl.v"
+        if not vendored_glbl.exists():
+            raise FileNotFoundError(f"Vendored glbl.v not found at {vendored_glbl}")
+
+        r.tb_srcs = (
+            [x for x in base_srcs.tb_srcs if x.name != "glbl.v"] +
+            ddr3_model.tb_srcs +
+            [vendored_glbl]
+        )
+
+        return r
+
+    @task(requires={
+        'base_srcs':'.srcs_noddr',
         }, always_rebuild=True, hidden=True)
     def srcs_module_verilator(self, cwd, base_srcs):
         """RTL + verification sources for module-level testbenches with Verilator"""
@@ -165,6 +193,28 @@ class Sources(Block):
         return r
 
     @task(requires={
+        'ddr3_model':'ddr3_model.generate_verilator',
+        }, always_rebuild=True, hidden=True)
+    def srcs_ddr3_boundary_verilator(self, cwd, ddr3_model):
+        """Minimal DDR3 controller/PHY/model boundary sources for Verilator"""
+        r = Result()
+
+        r.design_srcs = sorted(self.src_dir.glob("rtl/ddr3/*.v"))
+        r.tb_srcs = [self.src_dir / "tb" / "ddr3_boundary_tb.sv"] + ddr3_model.tb_srcs
+        r.defines = getattr(ddr3_model, "defines", {})
+        r.include_dirs = [self.src_dir / "rtl/inc"] + ddr3_model.include_dirs
+        r.unisims_dir = _get_prepared_unisims_dir(self.flow.base_dir)
+
+        unisims_repo = self.flow.base_dir / "vendor" / "XilinxUnisimLibrary"
+        vendored_glbl = unisims_repo / "verilog" / "src" / "glbl.v"
+        if not vendored_glbl.exists():
+            raise FileNotFoundError(f"Vendored glbl.v not found at {vendored_glbl}")
+
+        r.tb_srcs.append(vendored_glbl)
+
+        return r
+
+    @task(requires={
         'noddr':'.srcs_noddr',
         'ddr3_model':'ddr3_model.generate',
         }, always_rebuild=True, hidden=True)
@@ -174,7 +224,7 @@ class Sources(Block):
 
         r.design_srcs = noddr.design_srcs
 
-        r.defines = noddr.defines | {'WITH_EXT_DRAM':'1'}
+        r.defines = noddr.defines | {'WITH_EXT_DRAM':'1'} | getattr(ddr3_model, "defines", {})
 
         r.include_dirs = noddr.include_dirs + ddr3_model.include_dirs
         r.tb_srcs = noddr.tb_srcs + ddr3_model.tb_srcs

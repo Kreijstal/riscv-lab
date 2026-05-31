@@ -82,7 +82,8 @@ def compile(
         defines: Optional[Dict[str, str]] = None,
         timescale: str = "1ps/1fs",
         top_modules: Optional[List[str]] = None,
-        unisims_dir: Optional[Path] = None):
+        unisims_dir: Optional[Path] = None,
+        trace: bool = True):
     """Compile Verilog sources with Verilator"""
     if cwd is None:
         cwd = Path.cwd()
@@ -126,13 +127,14 @@ def compile(
         '--bbox-sys',    # Blackbox unknown $system calls
         '--timing',
         '--binary',
-        '--trace',
         '--main',
         '--exe',
         '--cc',
         '--top-module', top_module,
         '--timescale', f"{timescale}",
     ]
+    if trace:
+        verilator_opts += ['--trace']
     verilator_opts += macos_cxxflags()
 
     # Validate defines keys for safety
@@ -181,6 +183,7 @@ def simulate(
         netlist_sim = None,  # Unused, kept for API compatibility
         libs: Optional[List] = None,  # Unused, kept for API compatibility
         hide_mig_timingcheck_msg: bool = False,  # Unused, kept for API compatibility
+        trace: bool = True,
         ):
     """Run simulation with Verilator"""
     if cwd is None:
@@ -203,7 +206,7 @@ def simulate(
         raise ValueError(f"Invalid top module name: '{top_module}'. Must be a valid Verilog identifier.")
 
     # Compile and build with Verilator
-    compile(src_files, cwd, include_dirs, defines, timescale, top_modules, unisims_dir)
+    compile(src_files, cwd, include_dirs, defines, timescale, top_modules, unisims_dir, trace)
 
     executable_basename = f"V{top_module}"
     executable_path = Path(cwd) / "obj_dir" / executable_basename

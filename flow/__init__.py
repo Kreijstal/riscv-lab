@@ -12,6 +12,7 @@ from .module_tb import ModuleTb
 from .sources import Sources
 from .reggen import RegisterGenerator
 from .ddr3_model import Ddr3Model
+from .ddr3_boundary_tb import Ddr3BoundaryTb
 
 flow = Flow()
 
@@ -21,6 +22,7 @@ flow = Flow()
 sw_dirs = [
     "monitor",
     "minimal",
+    "test_ddr_smoke",
     "test_sim_ddr",
     "test_rvlab",
     "coremark",
@@ -50,6 +52,7 @@ flow['srcs'] = Sources(dependency_map={
 })
 
 flow['rvlab_fpga_top'] = RvlabFpgaTop(dependency_map={'srcs':'srcs'})
+flow['ddr3_boundary_tb'] = Ddr3BoundaryTb(dependency_map={'srcs':'srcs'})
 
 
 # Testbenches

@@ -1232,6 +1232,9 @@ module ddr3_phy #(
                 .IOBDELAY("IFD"), // NONE, BOTH, IBUF, IFD
                 .NUM_CE(1),// Number of clock enables (1,2)
                 .OFB_USED("FALSE"), // Select OFB path (FALSE, TRUE)
+                `ifdef SIM_MODEL
+                .HOLD_NONZERO("TRUE"),
+                `endif
                 // SRVAL_Q1 - SRVAL_Q4: Q output values when SR is used (0/1)
                 .SRVAL_Q1(1'b0),
                 .SRVAL_Q2(1'b0),

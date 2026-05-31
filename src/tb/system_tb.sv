@@ -223,6 +223,14 @@ module system_tb;
   );
 
   initial begin
+    int timeout_cycles;
+    if ($value$plusargs("rvlab_timeout_cycles=%d", timeout_cycles) && timeout_cycles > 0) begin
+      repeat (timeout_cycles) @(posedge clk);
+      $fatal(1, "rvlab_tests: timeout after %0d clk cycles.", timeout_cycles);
+    end
+  end
+
+  initial begin
     string sw_mem_filename;
 `ifdef VERILATOR
     $dumpfile("trace.vcd");
